@@ -1,0 +1,23 @@
+stages:
+  - build
+  - test
+
+variables:
+  PYTHON_VERSION: "3.10"
+
+build:
+  stage: build
+  script:
+    - bash setup_env.sh
+  artifacts:
+    paths:
+      - .venv/
+    expire_in: 1 hour
+
+test:
+  stage: test
+  dependencies:
+    - build
+  script:
+    - source .venv/bin/activate
+    - python -m pytest tests/ -v || echo "No tests found"

@@ -15,7 +15,6 @@ classifiers = [
 
 [project.dependencies]
 python-dotenv = "*"
-kafka-python = "*"
 confluent-kafka = "*"
 
 [build-system]
