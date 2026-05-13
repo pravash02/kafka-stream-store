@@ -1,0 +1,23 @@
+[project]
+name = "kafka-stream-store"
+version = "0.1.0"
+description = "A Kafka streaming store project"
+authors = [ { name = "Author", email = "author@example.com" } ]
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.dependencies]
+python-dotenv = "*"
+kafka-python = "*"
+confluent-kafka = "*"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
