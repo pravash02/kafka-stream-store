@@ -1,10 +1,11 @@
 import json
+import uuid
 
 from confluent_kafka import Consumer
 
 consumer_config = {
     "bootstrap.servers": "localhost:9092",
-    "group.id": "order-tracker",
+    "group.id": f"order-tracker-{uuid.uuid4()}",
     "auto.offset.reset": "earliest"
 }
 
