@@ -1,0 +1,169 @@
+{
+  "uid": "kafka-stream-store",
+  "title": "Real-Time Streaming Pipeline",
+  "tags": ["kafka", "spark", "streaming"],
+  "timezone": "browser",
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Events / Minute by Type",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "datasource": "PostgreSQL",
+      "targets": [
+        {
+          "rawSql": "SELECT minute AS time, event_type AS metric, event_count AS value FROM v_event_rate_per_minute ORDER BY 1",
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "lineWidth": 2, "fillOpacity": 15 }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Total Events (Last Hour)",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "datasource": "PostgreSQL",
+      "targets": [
+        {
+          "rawSql": "SELECT NOW() AS time, COUNT(*) AS value FROM events_cleaned WHERE event_ts > NOW() - INTERVAL '1 hour'",
+          "format": "table"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 3,
+      "title": "Sensor Anomalies (Last Hour)",
+      "type": "stat",
+      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+      "datasource": "PostgreSQL",
+      "targets": [
+        {
+          "rawSql": "SELECT NOW() AS time, COUNT(*) AS value FROM events_cleaned WHERE event_type='sensor' AND is_anomaly=true AND event_ts > NOW() - INTERVAL '1 hour'",
+          "format": "table"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 5, "color": "yellow" },
+              { "value": 10, "color": "red" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Avg Response Time (ms) by Page",
+      "type": "barchart",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "datasource": "PostgreSQL",
+      "targets": [
+        {
+          "rawSql": "SELECT page, ROUND(AVG(response_time_ms),0) AS avg_ms FROM events_cleaned WHERE event_type='clickstream' AND event_ts > NOW() - INTERVAL '1 hour' GROUP BY page ORDER BY avg_ms DESC",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Avg Temperature by Zone",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "datasource": "PostgreSQL",
+      "targets": [
+        {
+          "rawSql": "SELECT window_start AS time, location AS metric, ROUND(avg_temperature::numeric, 2) AS value FROM sensor_metrics WHERE window_start > NOW() - INTERVAL '1 hour' ORDER BY 1",
+          "format": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Revenue per Minute",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "datasource": "PostgreSQL",
+      "targets": [
+        {
+          "rawSql": "SELECT date_trunc('minute', event_ts) AS time, SUM(revenue) AS value FROM events_cleaned WHERE event_type='clickstream' AND event_ts > NOW() - INTERVAL '1 hour' GROUP BY 1 ORDER BY 1",
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "custom": { "fillOpacity": 20 }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Error Logs by Service",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "datasource": "PostgreSQL",
+      "targets": [
+        {
+          "rawSql": "SELECT window_start AS time, service AS metric, log_count AS value FROM log_metrics WHERE level='ERROR' AND window_start > NOW() - INTERVAL '1 hour' ORDER BY 1",
+          "format": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Top Pages by Visits",
+      "type": "table",
+      "gridPos": { "x": 0, "y": 24, "w": 8, "h": 8 },
+      "datasource": "PostgreSQL",
+      "targets": [
+        {
+          "rawSql": "SELECT page, visits, avg_ms AS \"avg_ms\", ROUND(revenue::numeric,2) AS revenue FROM v_top_pages LIMIT 10",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Unique Active Users / Min",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 24, "w": 8, "h": 8 },
+      "datasource": "PostgreSQL",
+      "targets": [
+        {
+          "rawSql": "SELECT date_trunc('minute', event_ts) AS time, COUNT(DISTINCT user_id) AS value FROM events_cleaned WHERE event_type='clickstream' AND event_ts > NOW() - INTERVAL '1 hour' GROUP BY 1 ORDER BY 1",
+          "format": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Slow Requests (>1500ms)",
+      "type": "stat",
+      "gridPos": { "x": 16, "y": 24, "w": 4, "h": 4 },
+      "datasource": "PostgreSQL",
+      "targets": [
+        {
+          "rawSql": "SELECT NOW() AS time, COUNT(*) AS value FROM events_cleaned WHERE is_slow_request=true AND event_ts > NOW() - INTERVAL '1 hour'",
+          "format": "table"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 38
+}

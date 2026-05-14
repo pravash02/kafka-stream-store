@@ -1,0 +1,209 @@
+name: CI/CD – Streaming Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/kafka-stream-store
+
+jobs:
+  # ── 1. Lint & Unit Tests ─────────────────────────────────────────────────
+  test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install test dependencies
+        run: |
+          pip install \
+            flake8 black isort \
+            pytest pytest-cov \
+            confluent-kafka pyspark==3.5.0 \
+            psycopg2-binary
+
+      - name: Lint with flake8
+        run: flake8 kafka/ spark/ --max-line-length=120 --ignore=E501,W503
+
+      - name: Check formatting with black
+        run: black --check kafka/ spark/
+
+      - name: Check import order with isort
+        run: isort --check-only kafka/ spark/
+
+      - name: Run unit tests
+        run: pytest tests/ -v --cov=. --cov-report=xml --cov-fail-under=70
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          file: coverage.xml
+
+  # ── 2. Build & Push Docker Images ────────────────────────────────────────
+  build:
+    name: Build Images
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      producer-tag: ${{ steps.meta-producer.outputs.tags }}
+      spark-tag: ${{ steps.meta-spark.outputs.tags }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ── Producer image ──
+      - name: Producer metadata
+        id: meta-producer
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-producer
+          tags: |
+            type=sha,prefix=sha-
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build & push producer
+        uses: docker/build-push-action@v5
+        with:
+          context: ./kafka
+          file: ./kafka/Dockerfile.producer
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-producer.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ── Spark image ──
+      - name: Spark metadata
+        id: meta-spark
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-spark
+          tags: |
+            type=sha,prefix=sha-
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build & push spark
+        uses: docker/build-push-action@v5
+        with:
+          context: ./spark
+          file: ./spark/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-spark.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ── 3. Integration Tests (docker-compose) ────────────────────────────────
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start pipeline
+        run: |
+          docker compose up -d zookeeper kafka postgres kafka-init
+          sleep 30
+
+      - name: Wait for Kafka
+        run: |
+          timeout 60 bash -c \
+            'until docker compose exec -T kafka \
+              kafka-broker-api-versions --bootstrap-server localhost:9092 \
+              &>/dev/null; do sleep 5; done'
+
+      - name: Run integration tests
+        run: pytest tests/integration/ -v --timeout=120
+
+      - name: Collect logs on failure
+        if: failure()
+        run: docker compose logs --tail=100 > compose-logs.txt
+
+      - name: Upload logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-logs
+          path: compose-logs.txt
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
+
+  # ── 4. Deploy to Staging ─────────────────────────────────────────────────
+  deploy-staging:
+    name: Deploy → Staging
+    runs-on: ubuntu-latest
+    needs: integration
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            cd ~/kafka-stream-store
+            git pull origin develop
+            docker compose pull
+            docker compose up -d --remove-orphans
+            docker image prune -f
+
+  # ── 5. Deploy to Production ──────────────────────────────────────────────
+  deploy-prod:
+    name: Deploy → Production
+    runs-on: ubuntu-latest
+    needs: integration
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            cd ~/kafka-stream-store
+            git pull origin main
+            docker compose pull
+            docker compose up -d --remove-orphans
+            docker image prune -f
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          generate_release_notes: true

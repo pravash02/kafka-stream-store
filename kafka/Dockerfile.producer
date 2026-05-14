@@ -1,0 +1,15 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy pyproject.toml from parent directory
+COPY pyproject.toml .
+
+# Install dependencies
+RUN pip install --no-cache-dir -e .
+
+# Copy producer files
+COPY kafka-producer/ ./kafka-producer/
+
+# Run producer
+CMD ["python", "-m", "kafka-producer.producer"]
