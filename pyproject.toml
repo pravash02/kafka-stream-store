@@ -13,15 +13,20 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-[project.dependencies]
-confluent-kafka = "2.14.0"
-faker = "40.15.0"
-pyspark = "3.5.3"
-pytest = "9.0.3"
-py4j = "0.10.9.9"
-pygments = "2.20.0"
-packaging = "26.2"
-pluggy = "1.6.0"
+dependencies = [
+    "confluent-kafka==2.14.0",
+    "faker==40.15.0",
+    "pyspark==3.5.3",
+    "pytest==9.0.3",
+    "pygments==2.20.0",
+    "packaging==26.2",
+    "pluggy==1.6.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["kafka*", "spark*"]
+exclude = ["tests*", "conceptual_demo_test*", "grafana*", "postgres*"]
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
