@@ -205,18 +205,3 @@ Push to GitHub
 ```
 
 ---
-
-## What This Demonstrates (Interview Talking Points)
-
-- **Kafka topology**: raw → cleaned → curated topic pipeline with DLQ
-- **Spark Structured Streaming**: `foreachBatch`, watermarking, window aggregations
-- **Delta Lake**: ACID transactions, time travel, partition pruning
-- **PostgreSQL sinks**: JDBC batch writes with schema migration
-- **Grafana**: auto-provisioned datasources + dashboards from code
-- **CI/CD**: multi-stage GitHub Actions with Docker layer caching, integration tests, environment-gated deploys
-- **Observability**: Prometheus metrics, Grafana alerting
-
----
-
-## License
-MIT
