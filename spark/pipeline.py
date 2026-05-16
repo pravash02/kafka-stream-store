@@ -23,8 +23,7 @@ from pyspark.sql.types import (
 )
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s - %(message)s"
 )
 log = logging.getLogger("spark-pipeline")
 
@@ -42,86 +41,98 @@ JDBC_URL = f"jdbc:postgresql://{PG_HOST}:{PG_PORT}/{PG_DB}"
 JDBC_PROPS = {"user": PG_USER, "password": PG_PASS, "driver": "org.postgresql.Driver"}
 
 # ── Schemas ───────────────────────────────────────────────────────────────
-CLICKSTREAM_SCHEMA = StructType([
-    StructField("event_id", StringType()),
-    StructField("event_type", StringType()),
-    StructField("timestamp", StringType()),
-    StructField("user_id", StringType()),
-    StructField("session_id", StringType()),
-    StructField("action", StringType()),
-    StructField("page", StringType()),
-    StructField("device", StringType()),
-    StructField("browser", StringType()),
-    StructField("country", StringType()),
-    StructField("response_time_ms", IntegerType()),
-    StructField("revenue", DoubleType()),
-])
+CLICKSTREAM_SCHEMA = StructType(
+    [
+        StructField("event_id", StringType()),
+        StructField("event_type", StringType()),
+        StructField("timestamp", StringType()),
+        StructField("user_id", StringType()),
+        StructField("session_id", StringType()),
+        StructField("action", StringType()),
+        StructField("page", StringType()),
+        StructField("device", StringType()),
+        StructField("browser", StringType()),
+        StructField("country", StringType()),
+        StructField("response_time_ms", IntegerType()),
+        StructField("revenue", DoubleType()),
+    ]
+)
 
-SENSOR_SCHEMA = StructType([
-    StructField("event_id", StringType()),
-    StructField("event_type", StringType()),
-    StructField("timestamp", StringType()),
-    StructField("sensor_id", StringType()),
-    StructField("temperature", DoubleType()),
-    StructField("humidity", DoubleType()),
-    StructField("pressure", DoubleType()),
-    StructField("vibration", DoubleType()),
-    StructField("is_anomaly", BooleanType()),
-    StructField("location", StringType()),
-])
+SENSOR_SCHEMA = StructType(
+    [
+        StructField("event_id", StringType()),
+        StructField("event_type", StringType()),
+        StructField("timestamp", StringType()),
+        StructField("sensor_id", StringType()),
+        StructField("temperature", DoubleType()),
+        StructField("humidity", DoubleType()),
+        StructField("pressure", DoubleType()),
+        StructField("vibration", DoubleType()),
+        StructField("is_anomaly", BooleanType()),
+        StructField("location", StringType()),
+    ]
+)
 
-LOG_SCHEMA = StructType([
-    StructField("event_id", StringType()),
-    StructField("event_type", StringType()),
-    StructField("timestamp", StringType()),
-    StructField("level", StringType()),
-    StructField("service", StringType()),
-    StructField("message", StringType()),
-    StructField("trace_id", StringType()),
-    StructField("status_code", IntegerType()),
-])
+LOG_SCHEMA = StructType(
+    [
+        StructField("event_id", StringType()),
+        StructField("event_type", StringType()),
+        StructField("timestamp", StringType()),
+        StructField("level", StringType()),
+        StructField("service", StringType()),
+        StructField("message", StringType()),
+        StructField("trace_id", StringType()),
+        StructField("status_code", IntegerType()),
+    ]
+)
 
-RAW_SCHEMA = StructType([
-    StructField("event_id", StringType()),
-    StructField("event_type", StringType()),
-    StructField("timestamp", StringType()),
-    # Clickstream fields
-    StructField("user_id", StringType()),
-    StructField("session_id", StringType()),
-    StructField("action", StringType()),
-    StructField("page", StringType()),
-    StructField("device", StringType()),
-    StructField("browser", StringType()),
-    StructField("country", StringType()),
-    StructField("response_time_ms", IntegerType()),
-    StructField("revenue", DoubleType()),
-    # Sensor fields
-    StructField("sensor_id", StringType()),
-    StructField("temperature", DoubleType()),
-    StructField("humidity", DoubleType()),
-    StructField("pressure", DoubleType()),
-    StructField("vibration", DoubleType()),
-    StructField("is_anomaly", BooleanType()),
-    StructField("location", StringType()),
-    # Log fields
-    StructField("level", StringType()),
-    StructField("service", StringType()),
-    StructField("message", StringType()),
-    StructField("trace_id", StringType()),
-    StructField("status_code", IntegerType()),
-])
+RAW_SCHEMA = StructType(
+    [
+        StructField("event_id", StringType()),
+        StructField("event_type", StringType()),
+        StructField("timestamp", StringType()),
+        # Clickstream fields
+        StructField("user_id", StringType()),
+        StructField("session_id", StringType()),
+        StructField("action", StringType()),
+        StructField("page", StringType()),
+        StructField("device", StringType()),
+        StructField("browser", StringType()),
+        StructField("country", StringType()),
+        StructField("response_time_ms", IntegerType()),
+        StructField("revenue", DoubleType()),
+        # Sensor fields
+        StructField("sensor_id", StringType()),
+        StructField("temperature", DoubleType()),
+        StructField("humidity", DoubleType()),
+        StructField("pressure", DoubleType()),
+        StructField("vibration", DoubleType()),
+        StructField("is_anomaly", BooleanType()),
+        StructField("location", StringType()),
+        # Log fields
+        StructField("level", StringType()),
+        StructField("service", StringType()),
+        StructField("message", StringType()),
+        StructField("trace_id", StringType()),
+        StructField("status_code", IntegerType()),
+    ]
+)
 
 
 def create_spark() -> SparkSession:
     return (
-        SparkSession.builder
-        .appName("RealTimeStreamingPipeline")
-        .config("spark.jars.packages",
-                "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,"
-                "io.delta:delta-core_2.12:2.4.0,"
-                "org.postgresql:postgresql:42.7.1")
+        SparkSession.builder.appName("RealTimeStreamingPipeline")
+        .config(
+            "spark.jars.packages",
+            "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,"
+            "io.delta:delta-core_2.12:2.4.0,"
+            "org.postgresql:postgresql:42.7.1",
+        )
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-        .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+        .config(
+            "spark.sql.catalog.spark_catalog",
+            "org.apache.spark.sql.delta.catalog.DeltaCatalog",
+        )
         .config("spark.sql.streaming.checkpointLocation", CHECKPOINT_DIR)
         .config("spark.sql.shuffle.partitions", "4")
         .getOrCreate()
@@ -131,8 +142,7 @@ def create_spark() -> SparkSession:
 # ── Stage 1: Read raw Kafka stream ────────────────────────────────────────
 def read_raw_stream(spark: SparkSession):
     return (
-        spark.readStream
-        .format("kafka")
+        spark.readStream.format("kafka")
         .option("kafka.bootstrap.servers", KAFKA_SERVERS)
         .option("subscribe", "events.raw")
         .option("startingOffsets", "latest")
@@ -165,9 +175,10 @@ def clean_stream(raw_df):
         # Clamp out-of-range sensor values
         .withColumn(
             "temperature",
-            F.when(F.col("event_type") == "sensor",
-                   F.greatest(F.lit(-50.0), F.least(F.lit(150.0), F.col("temperature")))
-                   ).otherwise(F.col("temperature"))
+            F.when(
+                F.col("event_type") == "sensor",
+                F.greatest(F.lit(-50.0), F.least(F.lit(150.0), F.col("temperature"))),
+            ).otherwise(F.col("temperature")),
         )
         # Null-safe revenue
         .withColumn("revenue", F.coalesce(F.col("revenue"), F.lit(0.0)))
@@ -177,8 +188,11 @@ def clean_stream(raw_df):
         # Flag anomalous response times
         .withColumn(
             "is_slow_request",
-            F.when((F.col("event_type") == "clickstream") & (F.col("response_time_ms") > 1500),
-                   F.lit(True)).otherwise(F.lit(False))
+            F.when(
+                (F.col("event_type") == "clickstream")
+                & (F.col("response_time_ms") > 1500),
+                F.lit(True),
+            ).otherwise(F.lit(False)),
         )
         .dropDuplicates(["event_id"])
     )
@@ -205,11 +219,12 @@ def write_to_postgres(batch_df, batch_id: int, table: str):
 def write_clickstream_agg(batch_df, batch_id: int):
     """Aggregate clickstream events per page/device and upsert to Postgres."""
     agg = (
-        batch_df
-        .filter(F.col("event_type") == "clickstream")
+        batch_df.filter(F.col("event_type") == "clickstream")
         .groupBy(
             F.window("event_ts", "1 minute").alias("window"),
-            "page", "device", "country"
+            "page",
+            "device",
+            "country",
         )
         .agg(
             F.count("*").alias("event_count"),
@@ -228,12 +243,8 @@ def write_clickstream_agg(batch_df, batch_id: int):
 def write_sensor_agg(batch_df, batch_id: int):
     """Aggregate sensor readings per location."""
     agg = (
-        batch_df
-        .filter(F.col("event_type") == "sensor")
-        .groupBy(
-            F.window("event_ts", "1 minute").alias("window"),
-            "location"
-        )
+        batch_df.filter(F.col("event_type") == "sensor")
+        .groupBy(F.window("event_ts", "1 minute").alias("window"), "location")
         .agg(
             F.avg("temperature").alias("avg_temperature"),
             F.max("temperature").alias("max_temperature"),
@@ -253,12 +264,8 @@ def write_sensor_agg(batch_df, batch_id: int):
 def write_log_agg(batch_df, batch_id: int):
     """Aggregate log events by service and level."""
     agg = (
-        batch_df
-        .filter(F.col("event_type") == "app_log")
-        .groupBy(
-            F.window("event_ts", "1 minute").alias("window"),
-            "service", "level"
-        )
+        batch_df.filter(F.col("event_type") == "app_log")
+        .groupBy(F.window("event_ts", "1 minute").alias("window"), "service", "level")
         .agg(
             F.count("*").alias("log_count"),
             F.avg(F.col("status_code").cast("double")).alias("avg_status_code"),
@@ -279,11 +286,27 @@ def process_batch(batch_df, batch_id: int):
 
     # Raw events → Postgres (last 24h rolling window kept via PG partition)
     cols = [
-        "event_id", "event_type", "event_ts", "user_id", "sensor_id",
-        "action", "page", "device", "country", "revenue",
-        "temperature", "humidity", "vibration", "is_anomaly", "location",
-        "level", "service", "status_code", "response_time_ms",
-        "is_slow_request", "processed_at",
+        "event_id",
+        "event_type",
+        "event_ts",
+        "user_id",
+        "sensor_id",
+        "action",
+        "page",
+        "device",
+        "country",
+        "revenue",
+        "temperature",
+        "humidity",
+        "vibration",
+        "is_anomaly",
+        "location",
+        "level",
+        "service",
+        "status_code",
+        "response_time_ms",
+        "is_slow_request",
+        "processed_at",
     ]
     write_to_postgres(batch_df.select(cols), batch_id, "events_cleaned")
 
@@ -306,8 +329,7 @@ def main():
 
     # ── Write to Delta Lake (fault-tolerant storage) ──────────────────────
     (
-        cleaned_df.writeStream
-        .format("delta")
+        cleaned_df.writeStream.format("delta")
         .outputMode("append")
         .option("checkpointLocation", f"{CHECKPOINT_DIR}/delta")
         .option("path", f"{DELTA_PATH}/events")
@@ -318,8 +340,7 @@ def main():
 
     # ── Write to Postgres via foreachBatch ────────────────────────────────
     (
-        cleaned_df.writeStream
-        .outputMode("update")
+        cleaned_df.writeStream.outputMode("update")
         .option("checkpointLocation", f"{CHECKPOINT_DIR}/postgres")
         .trigger(processingTime="10 seconds")
         .foreachBatch(process_batch)
