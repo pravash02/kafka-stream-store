@@ -28,7 +28,7 @@ jobs:
         run: |
           pip install \
             flake8 black isort \
-            pytest pytest-cov \
+            pytest pytest-cov pytest-timeout \
             confluent-kafka pyspark==3.5.0 \
             psycopg2-binary
 
@@ -134,7 +134,7 @@ jobs:
 
       - name: Install integration test dependencies
         run: |
-          pip install pytest
+          pip install pytest pytest-timeout
 
       - name: Start pipeline
         run: |
