@@ -122,38 +122,6 @@ kafka-stream-store/
         └── ci-cd.yml           # Full CI/CD pipeline
 ```
 
----
-
-## 3-Day Build Plan
-
-### Day 1 – Infrastructure & Ingestion
-- [ ] Spin up Docker Compose: Zookeeper, Kafka, Schema Registry, Kafka UI
-- [ ] Verify topics created: `events.raw`, `events.cleaned`, `events.curated`, `events.dlq`
-- [ ] Run producer: `docker compose up producer`
-- [ ] Confirm messages visible in Kafka UI at http://localhost:8080
-- [ ] Start PostgreSQL, verify `init.sql` created all tables
-- [ ] Push code to GitHub, confirm CI lint job passes
-
-### Day 2 – Spark Processing
-- [ ] Run Spark streaming job: `docker compose up spark-streaming`
-- [ ] Verify events appearing in `events_cleaned` table:
-  ```sql
-  SELECT event_type, COUNT(*) FROM events_cleaned GROUP BY 1;
-  ```
-- [ ] Verify aggregations in `clickstream_metrics`, `sensor_metrics`, `log_metrics`
-- [ ] Check Delta Lake files created at `/opt/delta-lake/events/`
-- [ ] Confirm data is partitioned by `event_type`
-- [ ] Run unit tests: `pytest tests/ -v`
-
-### Day 3 – Dashboard & CI/CD
-- [ ] Open Grafana → confirm dashboard auto-provisioned
-- [ ] All 10 panels showing live data with `refresh=10s`
-- [ ] Add GitHub Secrets: `STAGING_HOST`, `STAGING_SSH_KEY`, etc.
-- [ ] Merge a PR → watch CI/CD pipeline run: lint → build → integration → deploy
-- [ ] Screenshot or record dashboard for portfolio
-
----
-
 ## Key Queries for Understanding the Pipeline
 
 ```sql
@@ -175,15 +143,6 @@ SELECT * FROM v_sensor_anomalies LIMIT 20;
 -- Consumer lag (run in Kafka container)
 -- kafka-consumer-groups --bootstrap-server localhost:9092 --describe --all-groups
 ```
-
----
-
-## Scaling Notes
-
-- **More throughput**: Increase `EVENTS_PER_SECOND` env var on the producer
-- **More partitions**: Edit `kafka-init` command in docker-compose.yml
-- **Spark workers**: Add `spark-worker` services to docker-compose.yml
-- **Production Kafka**: Replace with MSK (AWS) or Confluent Cloud
 
 ---
 
