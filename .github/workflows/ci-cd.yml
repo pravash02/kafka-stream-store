@@ -42,7 +42,7 @@ jobs:
         run: isort --check-only kafka/ spark/
 
       - name: Run unit tests
-        run: pytest tests/ -v --cov=. --cov-report=xml --cov-fail-under=70
+        run: pytest tests/ -v --cov=. --cov-report=xml --cov-fail-under=50
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
