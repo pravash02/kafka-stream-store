@@ -10,13 +10,16 @@ Sink B:  PostgreSQL (live dashboard feed)
 
 import logging
 import os
-import json
-from datetime import datetime
 
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import (
-    DoubleType, IntegerType, StringType, StructField, StructType, TimestampType, BooleanType
+    BooleanType,
+    DoubleType,
+    IntegerType,
+    StringType,
+    StructField,
+    StructType,
 )
 
 logging.basicConfig(
@@ -26,14 +29,14 @@ logging.basicConfig(
 log = logging.getLogger("spark-pipeline")
 
 # ── Config ────────────────────────────────────────────────────────────────
-KAFKA_SERVERS   = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
-PG_HOST         = os.getenv("POSTGRES_HOST", "localhost")
-PG_PORT         = os.getenv("POSTGRES_PORT", "5432")
-PG_DB           = os.getenv("POSTGRES_DB", "streaming_db")
-PG_USER         = os.getenv("POSTGRES_USER", "pipeline")
-PG_PASS         = os.getenv("POSTGRES_PASSWORD", "pipeline123")
-DELTA_PATH      = os.getenv("DELTA_PATH", "/opt/delta-lake")
-CHECKPOINT_DIR  = f"{DELTA_PATH}/checkpoints"
+KAFKA_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+PG_HOST = os.getenv("POSTGRES_HOST", "localhost")
+PG_PORT = os.getenv("POSTGRES_PORT", "5432")
+PG_DB = os.getenv("POSTGRES_DB", "streaming_db")
+PG_USER = os.getenv("POSTGRES_USER", "pipeline")
+PG_PASS = os.getenv("POSTGRES_PASSWORD", "pipeline123")
+DELTA_PATH = os.getenv("DELTA_PATH", "/opt/delta-lake")
+CHECKPOINT_DIR = f"{DELTA_PATH}/checkpoints"
 
 JDBC_URL = f"jdbc:postgresql://{PG_HOST}:{PG_PORT}/{PG_DB}"
 JDBC_PROPS = {"user": PG_USER, "password": PG_PASS, "driver": "org.postgresql.Driver"}
@@ -302,7 +305,7 @@ def main():
     cleaned_df = clean_stream(raw_df)
 
     # ── Write to Delta Lake (fault-tolerant storage) ──────────────────────
-    delta_query = (
+    (
         cleaned_df.writeStream
         .format("delta")
         .outputMode("append")
@@ -314,7 +317,7 @@ def main():
     )
 
     # ── Write to Postgres via foreachBatch ────────────────────────────────
-    pg_query = (
+    (
         cleaned_df.writeStream
         .outputMode("update")
         .option("checkpointLocation", f"{CHECKPOINT_DIR}/postgres")
