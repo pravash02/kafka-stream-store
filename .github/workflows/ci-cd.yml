@@ -176,25 +176,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check STAGING SSH secret
-        run: |
-          if [ -z "${{ secrets.STAGING_HOST }}" ]; then
-            echo "ERROR: STAGING_HOST secret is not set"
-            exit 1
-          fi
+      # - name: Check STAGING SSH secret
+      #   run: |
+      #     if [ -z "${{ secrets.STAGING_HOST }}" ]; then
+      #       echo "ERROR: STAGING_HOST secret is not set"
+      #       exit 1
+      #     fi
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.STAGING_HOST }}
-          username: ${{ secrets.STAGING_USER }}
-          key: ${{ secrets.STAGING_SSH_KEY }}
-          script: |
-            cd ~/kafka-stream-store
-            git pull origin develop
-            docker compose pull
-            docker compose up -d --remove-orphans
-            docker image prune -f
+      # - name: Deploy via SSH
+      #   uses: appleboy/ssh-action@v1.0.0
+      #   with:
+      #     host: ${{ secrets.STAGING_HOST }}
+      #     username: ${{ secrets.STAGING_USER }}
+      #     key: ${{ secrets.STAGING_SSH_KEY }}
+      #     script: |
+      #       cd ~/kafka-stream-store
+      #       git pull origin develop
+      #       docker compose pull
+      #       docker compose up -d --remove-orphans
+      #       docker image prune -f
 
   # ── 5. Deploy to Production ──────────────────────────────────────────────
   # deploy-prod:
