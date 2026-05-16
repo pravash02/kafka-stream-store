@@ -111,7 +111,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./spark
-          file: ./spark/Dockerfile
+          file: ./spark/Dockerfile.sparkstreaming
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-spark.outputs.tags }}
           cache-from: type=gha
