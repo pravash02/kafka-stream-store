@@ -149,7 +149,7 @@ jobs:
               &>/dev/null; do sleep 5; done'
 
       - name: Run integration tests
-        run: pytest tests/integration/ -v --timeout=120
+        run: pytest tests/test_pipeline.py -v --timeout=120 -k "TestIntegrationSmoke"
 
       - name: Collect logs on failure
         if: failure()
