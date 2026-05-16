@@ -89,7 +89,7 @@ jobs:
       - name: Build & push producer
         uses: docker/build-push-action@v5
         with:
-          context: ./kafka
+          context: .
           file: ./kafka/Dockerfile.producer
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-producer.outputs.tags }}

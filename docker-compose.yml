@@ -88,8 +88,8 @@ services:
   # ─── Event Producer ──────────────────────────────────────
   producer:
     build:
-      context: ./kafka
-      dockerfile: Dockerfile.producer
+      context: .
+      dockerfile: ./kafka/Dockerfile.producer
     container_name: event-producer
     depends_on:
       kafka-init:
