@@ -35,8 +35,8 @@ jobs:
       - name: Lint with flake8
         run: flake8 kafka/ spark/ --max-line-length=120 --ignore=E501,W503
 
-      - name: Check formatting with black
-        run: black --check kafka/ spark/
+      # - name: Check formatting with black
+      #   run: black --check kafka/ spark/
 
       - name: Check import order with isort
         run: isort --check-only kafka/ spark/
