@@ -176,6 +176,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check STAGING SSH secret
+        run: |
+          if [ -z "${{ secrets.STAGING_HOST }}" ]; then
+            echo "ERROR: STAGING_HOST secret is not set"
+            exit 1
+          fi
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -198,6 +205,13 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check PROD SSH secret
+        run: |
+          if [ -z "${{ secrets.PROD_HOST }}" ]; then
+            echo "ERROR: PROD_HOST secret is not set"
+            exit 1
+          fi
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
