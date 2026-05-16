@@ -110,7 +110,7 @@ jobs:
       - name: Build & push spark
         uses: docker/build-push-action@v5
         with:
-          context: ./spark
+          context: .
           file: ./spark/Dockerfile.sparkstreaming
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-spark.outputs.tags }}

@@ -2,15 +2,14 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Copy pyproject.toml from parent directory
+# Copy pyproject.toml from repository root
 COPY pyproject.toml .
 
 # Install dependencies
 RUN pip install --no-cache-dir -e .
 
 # Copy pipeline script
-COPY pipeline.py .
-COPY pipeline.json .
+COPY spark/pipeline.py .
 
 # Run pipeline
 CMD ["python", "pipeline.py"]

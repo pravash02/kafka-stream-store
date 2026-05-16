@@ -102,8 +102,8 @@ services:
   # ─── Spark Streaming ─────────────────────────────────────
   spark-streaming:
     build:
-      context: ./spark
-      dockerfile: Dockerfile.sparkstreaming
+      context: .
+      dockerfile: ./spark/Dockerfile.sparkstreaming
     container_name: spark-streaming
     depends_on:
       kafka-init:
